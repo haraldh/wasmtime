@@ -172,6 +172,11 @@ macro_rules! wasi_file_impl {
                 use wasi_common::ErrorExt;
                 Err(Error::badf())
             }
+
+            async fn accept(&mut self, _fdflags: FdFlags) -> Result<Box<dyn WasiFile>, Error> {
+                use wasi_common::ErrorExt;
+                Err(Error::badf())
+            }
         }
         #[cfg(windows)]
         impl AsHandle for $ty {

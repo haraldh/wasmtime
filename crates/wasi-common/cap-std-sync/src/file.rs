@@ -25,6 +25,15 @@ impl WasiFile for File {
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    async fn accept(&mut self, fdflags: FdFlags) -> Result<Box<dyn WasiFile>, Error> {
+        let listener = cap_std::net::TcpListener::from_fd(self.0.try_clone()?.into_fd());
+        let (stream, _) = listener.accept()?;
+        let mut f: Box<dyn WasiFile> = Box::new(File(cap_std::fs::File::from_fd(stream.into_fd())));
+        let _ = f.set_fdflags(fdflags).await?;
+        Ok(f)
+    }
+
     async fn datasync(&self) -> Result<(), Error> {
         self.0.sync_data()?;
         Ok(())
@@ -162,7 +171,8 @@ impl AsHandle for File {
 }
 
 #[cfg(unix)]
-use io_lifetimes::{AsFd, BorrowedFd};
+use io_lifetimes::{AsFd, BorrowedFd, FromFd, IntoFd};
+
 #[cfg(unix)]
 impl AsFd for File {
     fn as_fd(&self) -> BorrowedFd<'_> {
