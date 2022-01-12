@@ -110,6 +110,10 @@ impl WasiFile for Stdin {
     async fn writable(&self) -> Result<(), Error> {
         Err(Error::badf())
     }
+
+    async fn accept(&mut self, _fdflags: FdFlags) -> Result<Box<dyn WasiFile>, Error> {
+        Err(Error::badf())
+    }
 }
 #[cfg(windows)]
 impl AsHandle for Stdin {
@@ -214,6 +218,9 @@ macro_rules! wasi_file_write_impl {
                 Err(Error::badf())
             }
             async fn writable(&self) -> Result<(), Error> {
+                Err(Error::badf())
+            }
+            async fn accept(&mut self, _fdflags: FdFlags) -> Result<Box<dyn WasiFile>, Error> {
                 Err(Error::badf())
             }
         }

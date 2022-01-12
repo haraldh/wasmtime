@@ -186,6 +186,10 @@ impl<R: Read + Any + Send + Sync> WasiFile for ReadPipe<R> {
     async fn writable(&self) -> Result<(), Error> {
         Err(Error::badf())
     }
+
+    async fn accept(&mut self, fdflags: FdFlags) -> Result<Box<dyn WasiFile>, Error> {
+        Err(Error::badf())
+    }
 }
 
 /// A virtual pipe write end.
@@ -340,6 +344,10 @@ impl<W: Write + Any + Send + Sync> WasiFile for WritePipe<W> {
         Err(Error::badf())
     }
     async fn writable(&self) -> Result<(), Error> {
+        Err(Error::badf())
+    }
+
+    async fn accept(&mut self, fdflags: FdFlags) -> Result<Box<dyn WasiFile>, Error> {
         Err(Error::badf())
     }
 }

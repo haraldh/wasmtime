@@ -1148,6 +1148,18 @@ impl wasi_snapshot_preview1::WasiSnapshotPreview1 for WasiCtx {
         Ok(())
     }
 
+    async fn accept(&mut self, fd: types::Fd, flags: types::Fdflags) -> Result<types::Fd, Error> {
+        let table = self.table();
+        let f = table
+            .get_file_mut(u32::from(fd))?
+            .get_cap_mut(FileCaps::READ)?;
+
+        let file = f.accept(FdFlags::from(flags)).await?;
+        let file_caps = FileCaps::READ | FileCaps::WRITE | FileCaps::FDSTAT_SET_FLAGS;
+        let fd = table.push(Box::new(FileEntry::new(file_caps, file)))?;
+        Ok(types::Fd::from(fd))
+    }
+
     async fn sock_recv<'a>(
         &mut self,
         _fd: types::Fd,
