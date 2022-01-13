@@ -39,6 +39,11 @@ rayon = "1.5.0"
 humantime = "2.0.0"
 wasmparser = "0.81.0"
 lazy_static = "1.4.0"
+listenfd = "0.3.5"
+cap-std = "0.21.1"
+io-lifetimes = { version = "0.3.3", default-features = false }
+wasi-common = { path = "crates/wasi-common", version = "=0.32.0" }
+wasi-cap-std-sync = { path = "crates/wasi-common/cap-std-sync", version = "=0.32.0" }
 
 [target.'cfg(unix)'.dependencies]
 rustix = "0.26.2"

@@ -14,6 +14,7 @@ use std::{
 use structopt::{clap::AppSettings, StructOpt};
 use wasmtime::{Engine, Func, Linker, Module, Store, Trap, Val, ValType};
 use wasmtime_wasi::sync::{ambient_authority, Dir, WasiCtxBuilder};
+use wasmtime_wasi::WasiFile;
 
 #[cfg(feature = "wasi-nn")]
 use wasmtime_wasi_nn::WasiNnCtx;
@@ -425,7 +426,32 @@ fn populate_with_wasi(
         for (name, dir) in preopen_dirs.into_iter() {
             builder = builder.preopened_dir(dir, name)?;
         }
-        store.data_mut().wasi = Some(builder.build());
+
+        let mut ctx = builder.build();
+
+        use listenfd::ListenFd;
+        let mut listenfd = ListenFd::from_env();
+
+        if let Some(listener) = listenfd.take_tcp_listener(0)? {
+            use io_lifetimes::{FromFd, IntoFd};
+            use wasi_common::file::FileCaps;
+
+            let file: Box<dyn WasiFile> = Box::new(wasi_cap_std_sync::file::File::from_cap_std(
+                cap_std::fs::File::from_fd(
+                    cap_std::net::TcpListener::from_std(listener, ambient_authority()).into_fd(),
+                ),
+            ));
+
+            let caps = FileCaps::FDSTAT_SET_FLAGS
+                | FileCaps::READ
+                | FileCaps::WRITE
+                | FileCaps::POLL_READWRITE;
+
+            ctx.insert_file(3, file, caps);
+            println!("Added listener");
+        }
+
+        store.data_mut().wasi = Some(ctx);
     }
 
     if wasi_modules.wasi_nn {

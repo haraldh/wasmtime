@@ -1564,6 +1564,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a261afc61b7a5e323933b402ca6a1765183687c614789b1e4db7762ed4230bca"
 
 [[package]]
+name = "listenfd"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "809e514e2cb8a9624701346ea3e694c1766d76778e343e537d873c1c366e79a7"
+dependencies = [
+ "libc",
+ "uuid",
+ "winapi",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3434,13 +3445,16 @@ version = "0.32.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "cap-std",
  "criterion",
  "env_logger 0.8.3",
  "file-per-thread-logger",
  "filecheck",
  "humantime 2.1.0",
+ "io-lifetimes",
  "lazy_static",
  "libc",
+ "listenfd",
  "memchr",
  "more-asserts",
  "num_cpus",
@@ -3453,6 +3467,8 @@ dependencies = [
  "test-programs",
  "tokio",
  "tracing-subscriber",
+ "wasi-cap-std-sync",
+ "wasi-common",
  "wasmparser",
  "wasmtime",
  "wasmtime-cache",
