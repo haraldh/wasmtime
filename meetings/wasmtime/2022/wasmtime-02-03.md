@@ -21,7 +21,7 @@
 - cfallin
 - lgr
 - jlbirch
-- harold
+- haraldh
 - sunfish
 
 ### Notes
