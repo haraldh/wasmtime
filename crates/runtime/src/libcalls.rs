@@ -60,9 +60,9 @@ use crate::table::{Table, TableElementType};
 use crate::vmcontext::{VMCallerCheckedAnyfunc, VMContext};
 use crate::TrapReason;
 use anyhow::Result;
-use std::mem;
 use std::ptr::{self, NonNull};
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::{io, mem};
 use wasmtime_environ::{
     DataIndex, ElemIndex, FuncIndex, GlobalIndex, MemoryIndex, TableIndex, TrapCode,
 };
@@ -431,20 +431,71 @@ unsafe fn externref_global_set(vmctx: *mut VMContext, index: u32, externref: *mu
     drop(old);
 }
 
+unsafe fn futex_wait(
+    futex_ptr: *const AtomicU32,
+    expected: u32,
+    timeout: i64,
+) -> Result<u32, io::Error> {
+    let timespec: Option<libc::timespec> = if timeout > 0 {
+        Some(libc::timespec {
+            tv_sec: timeout / 1_000_000_000,
+            tv_nsec: timeout % 1_000_000_000,
+        })
+    } else {
+        None
+    };
+
+    let timespec = timespec.map_or(0, |t| &t as *const _ as usize);
+
+    loop {
+        let r = libc::syscall(
+            libc::SYS_futex,
+            futex_ptr,
+            libc::FUTEX_WAIT,
+            expected,
+            timespec,
+        );
+
+        if r == 0 {
+            let val = (&*futex_ptr).load(Ordering::Acquire);
+            if val != expected {
+                return Ok(1);
+            } else {
+                return Ok(0);
+            }
+        }
+
+        let err = io::Error::last_os_error();
+        let errno = err.raw_os_error().unwrap();
+
+        match errno {
+            libc::EINTR => continue,
+            libc::ETIMEDOUT => return Ok(2),
+            _ => return Err(err),
+        }
+    }
+}
+
+fn futex_wake(futex_ptr: *const AtomicU32, count: u32) -> Result<u32, io::Error> {
+    match unsafe { libc::syscall(libc::SYS_futex, futex_ptr, libc::FUTEX_WAKE, count) } {
+        n if n >= 0 => Ok(n as u32),
+        -1 => Err(io::Error::last_os_error()),
+        _ => unreachable!(),
+    }
+}
+
 // Implementation of `memory.atomic.notify` for locally defined memories.
 unsafe fn memory_atomic_notify(
     vmctx: *mut VMContext,
     memory_index: u32,
     addr: *mut u8,
-    _count: u32,
+    count: u32,
 ) -> Result<u32, TrapReason> {
     let memory = MemoryIndex::from_u32(memory_index);
     let instance = (*vmctx).instance();
     validate_atomic_addr(instance, memory, addr, 4)?;
-    Err(
-        anyhow::anyhow!("unimplemented: wasm atomics (fn memory_atomic_notify) unsupported",)
-            .into(),
-    )
+    futex_wake(addr as *const AtomicU32, count)
+        .map_err(|e| TrapReason::user_with_backtrace(e.into()))
 }
 
 // Implementation of `memory.atomic.wait32` for locally defined memories.
@@ -452,16 +503,14 @@ unsafe fn memory_atomic_wait32(
     vmctx: *mut VMContext,
     memory_index: u32,
     addr: *mut u8,
-    _expected: u32,
-    _timeout: u64,
+    expected: u32,
+    timeout: u64,
 ) -> Result<u32, TrapReason> {
     let memory = MemoryIndex::from_u32(memory_index);
     let instance = (*vmctx).instance();
     validate_atomic_addr(instance, memory, addr, 4)?;
-    Err(
-        anyhow::anyhow!("unimplemented: wasm atomics (fn memory_atomic_wait32) unsupported",)
-            .into(),
-    )
+    futex_wait(addr as *const AtomicU32, expected, timeout as i64)
+        .map_err(|e| TrapReason::user_with_backtrace(e.into()))
 }
 
 // Implementation of `memory.atomic.wait64` for locally defined memories.
