@@ -16,6 +16,7 @@ pub struct WasiCtx {
     pub clocks: WasiClocks,
     pub sched: Box<dyn WasiSched>,
     pub table: Table,
+    pub unix_pair: &'static (dyn Fn(&Self) -> Result<(u32, u32), Error> + Send + Sync),
 }
 
 impl WasiCtx {
@@ -24,6 +25,7 @@ impl WasiCtx {
         clocks: WasiClocks,
         sched: Box<dyn WasiSched>,
         table: Table,
+        unix_pair: &'static (dyn Fn(&Self) -> Result<(u32, u32), Error> + Send + Sync),
     ) -> Self {
         let s = WasiCtx {
             args: StringArray::new(),
@@ -32,6 +34,7 @@ impl WasiCtx {
             clocks,
             sched,
             table,
+            unix_pair,
         };
         s.set_stdin(Box::new(crate::pipe::ReadPipe::new(std::io::empty())));
         s.set_stdout(Box::new(crate::pipe::WritePipe::new(std::io::sink())));
@@ -128,5 +131,9 @@ impl WasiCtx {
             dir,
         )))?;
         Ok(())
+    }
+
+    pub fn unix_pair(&self) -> Result<(u32, u32), Error> {
+        (self.unix_pair)(self)
     }
 }

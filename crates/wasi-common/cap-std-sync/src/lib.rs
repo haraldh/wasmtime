@@ -50,7 +50,7 @@ use crate::net::Socket;
 use cap_rand::{Rng, RngCore, SeedableRng};
 use std::path::Path;
 use std::sync::Arc;
-use wasi_common::{file::FileCaps, table::Table, Error, WasiCtx, WasiFile};
+use wasi_common::{file::FileCaps, table::Table, Error, ErrorExt, WasiCtx, WasiFile};
 
 pub struct WasiCtxBuilder(WasiCtx);
 
@@ -61,6 +61,7 @@ impl WasiCtxBuilder {
             clocks_ctx(),
             sched_ctx(),
             Table::new(),
+            &|_| Err(Error::not_supported()),
         ))
     }
     pub fn env(mut self, var: &str, value: &str) -> Result<Self, wasi_common::StringArrayError> {

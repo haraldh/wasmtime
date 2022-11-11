@@ -28,6 +28,24 @@ impl WasiCtxBuilder {
             clocks_ctx(),
             sched_ctx(),
             Table::new(),
+            &|this: &mut WasiCtx| -> Result<(u32, u32), Error> {
+                let (a, b) = std::os::unix::net::UnixStream::pair()?;
+
+                let caps = FileCaps::FDSTAT_SET_FLAGS
+                    | FileCaps::FILESTAT_GET
+                    | FileCaps::READ
+                    | FileCaps::WRITE
+                    | FileCaps::POLL_READWRITE;
+
+                let a = cap_std::os::unix::net::UnixStream::from_std(a);
+                let a = UnixStream::from_cap_std(a);
+                let a = this.push_file(Box::new(a), caps)?;
+
+                let b = cap_std::os::unix::net::UnixStream::from_std(b);
+                let b = UnixStream::from_cap_std(b);
+                let b = this.push_file(Box::new(b), caps)?;
+                Ok((a, b))
+            },
         ))
     }
     pub fn env(mut self, var: &str, value: &str) -> Result<Self, wasi_common::StringArrayError> {

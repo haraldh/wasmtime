@@ -1114,6 +1114,11 @@ impl wasi_snapshot_preview1::WasiSnapshotPreview1 for Arc<WasiCtx> {
 
         f.sock_shutdown(SdFlags::from(how)).await
     }
+
+    async fn socketpair(&mut self) -> Result<(types::Fd, types::Fd), Error> {
+        self.unix_pair()
+            .map(|(a, b)| (types::Fd::from(a), types::Fd::from(b)))
+    }
 }
 
 impl From<types::Advice> for Advice {
