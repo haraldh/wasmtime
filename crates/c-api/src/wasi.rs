@@ -8,6 +8,7 @@ use std::fs::File;
 use std::os::raw::{c_char, c_int};
 use std::path::{Path, PathBuf};
 use std::slice;
+use std::sync::Arc;
 use wasi_common::pipe::ReadPipe;
 use wasmtime_wasi::{
     sync::{Dir, WasiCtxBuilder},
@@ -61,7 +62,7 @@ pub enum WasiConfigWritePipe {
 wasmtime_c_api_macros::declare_own!(wasi_config_t);
 
 impl wasi_config_t {
-    pub fn into_wasi_ctx(self) -> Result<WasiCtx> {
+    pub fn into_wasi_ctx(self) -> Result<Arc<WasiCtx>> {
         let mut builder = WasiCtxBuilder::new();
         if self.inherit_args {
             builder = builder.inherit_args()?;

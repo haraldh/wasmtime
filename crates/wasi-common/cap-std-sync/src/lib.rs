@@ -49,6 +49,7 @@ pub use sched::sched_ctx;
 use crate::net::Socket;
 use cap_rand::{Rng, RngCore, SeedableRng};
 use std::path::Path;
+use std::sync::Arc;
 use wasi_common::{file::FileCaps, table::Table, Error, WasiCtx, WasiFile};
 
 pub struct WasiCtxBuilder(WasiCtx);
@@ -135,8 +136,8 @@ impl WasiCtxBuilder {
         self.0.insert_file(fd, file, caps);
         Ok(self)
     }
-    pub fn build(self) -> WasiCtx {
-        self.0
+    pub fn build(self) -> Arc<WasiCtx> {
+        Arc::new(self.0)
     }
 }
 

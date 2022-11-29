@@ -11,6 +11,7 @@ use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::io::{IoSlice, IoSliceMut};
 use std::ops::Deref;
+use std::sync::Arc;
 use wiggle::GuestPtr;
 
 wiggle::from_witx!({
@@ -387,7 +388,7 @@ convert_flags_bidirectional!(
 // This implementation, wherever possible, delegates directly to the Snapshot1 implementation,
 // performing the no-op type conversions along the way.
 #[wiggle::async_trait]
-impl wasi_unstable::WasiUnstable for WasiCtx {
+impl wasi_unstable::WasiUnstable for Arc<WasiCtx> {
     async fn args_get<'a>(
         &mut self,
         argv: &GuestPtr<'a, GuestPtr<'a, u8>>,

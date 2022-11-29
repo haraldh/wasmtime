@@ -5,6 +5,7 @@ use crate::witx::types::{
 };
 use crate::witx::wasi_ephemeral_nn::WasiEphemeralNn;
 use crate::WasiNnCtx;
+use std::sync::Arc;
 use thiserror::Error;
 use wiggle::GuestPtr;
 
@@ -24,7 +25,7 @@ pub enum UsageError {
     NotEnoughMemory(u32),
 }
 
-impl<'a> WasiEphemeralNn for WasiNnCtx {
+impl<'a> WasiEphemeralNn for Arc<WasiNnCtx> {
     fn load<'b>(
         &mut self,
         builders: &GraphBuilderArray<'_>,

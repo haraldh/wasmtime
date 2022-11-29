@@ -37,7 +37,7 @@ impl wiggle::GuestErrorType for types::Errno {
 }
 
 #[wiggle::async_trait]
-impl wasi_snapshot_preview1::WasiSnapshotPreview1 for WasiCtx {
+impl wasi_snapshot_preview1::WasiSnapshotPreview1 for Arc<WasiCtx> {
     async fn args_get<'b>(
         &mut self,
         argv: &GuestPtr<'b, GuestPtr<'b, u8>>,

@@ -9,12 +9,12 @@ use std::thread;
 use wasmtime::*;
 use wasmtime_wasi::{sync::WasiCtxBuilder, WasiCtx};
 
-fn store(engine: &Engine) -> Store<WasiCtx> {
+fn store(engine: &Engine) -> Store<Arc<WasiCtx>> {
     let wasi = WasiCtxBuilder::new().build();
     Store::new(engine, wasi)
 }
 
-fn instantiate(pre: &InstancePre<WasiCtx>, engine: &Engine) -> Result<()> {
+fn instantiate(pre: &InstancePre<Arc<WasiCtx>>, engine: &Engine) -> Result<()> {
     let mut store = store(engine);
     let _instance = pre.instantiate(&mut store)?;
     Ok(())

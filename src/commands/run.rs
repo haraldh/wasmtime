@@ -5,6 +5,7 @@ use clap::Parser;
 use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io::Read;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use std::{
@@ -449,9 +450,9 @@ impl RunCommand {
 
 #[derive(Default)]
 struct Host {
-    wasi: Option<wasmtime_wasi::WasiCtx>,
+    wasi: Option<Arc<wasmtime_wasi::WasiCtx>>,
     #[cfg(feature = "wasi-nn")]
-    wasi_nn: Option<WasiNnCtx>,
+    wasi_nn: Option<Arc<WasiNnCtx>>,
     #[cfg(feature = "wasi-crypto")]
     wasi_crypto: Option<WasiCryptoCtx>,
 }

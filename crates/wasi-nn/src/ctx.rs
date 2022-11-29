@@ -6,7 +6,7 @@ use crate::r#impl::UsageError;
 use crate::witx::types::{Graph, GraphEncoding, GraphExecutionContext};
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 use thiserror::Error;
 use wiggle::GuestError;
 
@@ -19,7 +19,7 @@ pub struct WasiNnCtx {
 
 impl WasiNnCtx {
     /// Make a new context from the default state.
-    pub fn new() -> WasiNnResult<Self> {
+    pub fn new() -> WasiNnResult<Arc<Self>> {
         let mut backends = HashMap::new();
         backends.insert(
             // This is necessary because Wiggle's variant types do not derive
@@ -27,11 +27,11 @@ impl WasiNnCtx {
             GraphEncoding::Openvino.into(),
             Box::new(OpenvinoBackend::default()) as Box<dyn Backend>,
         );
-        Ok(Self {
+        Ok(Arc::new(Self {
             backends: RwLock::new(backends),
             graphs: RwLock::new(Table::default()),
             executions: RwLock::new(Table::default()),
-        })
+        }))
     }
 }
 

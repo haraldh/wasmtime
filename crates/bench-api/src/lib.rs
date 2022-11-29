@@ -139,6 +139,7 @@ use crate::unsafe_send_sync::UnsafeSendSync;
 use anyhow::{Context, Result};
 use std::os::raw::{c_int, c_void};
 use std::slice;
+use std::sync::Arc;
 use std::{env, path::PathBuf};
 use target_lexicon::Triple;
 use wasmtime::{Config, Engine, Instance, Linker, Module, Store};
@@ -403,17 +404,17 @@ struct BenchState {
     instantiation_timer: *mut u8,
     instantiation_start: extern "C" fn(*mut u8),
     instantiation_end: extern "C" fn(*mut u8),
-    make_wasi_cx: Box<dyn FnMut() -> Result<WasiCtx>>,
+    make_wasi_cx: Box<dyn FnMut() -> Result<Arc<WasiCtx>>>,
     module: Option<Module>,
     store_and_instance: Option<(Store<HostState>, Instance)>,
 }
 
 struct HostState {
-    wasi: WasiCtx,
+    wasi: Arc<WasiCtx>,
     #[cfg(feature = "wasi-nn")]
-    wasi_nn: wasmtime_wasi_nn::WasiNnCtx,
+    wasi_nn: Arc<wasmtime_wasi_nn::WasiNnCtx>,
     #[cfg(feature = "wasi-crypto")]
-    wasi_crypto: wasmtime_wasi_crypto::WasiCryptoCtx,
+    wasi_crypto: Arc<wasmtime_wasi_crypto::WasiCryptoCtx>,
 }
 
 impl BenchState {
@@ -428,7 +429,7 @@ impl BenchState {
         execution_timer: *mut u8,
         execution_start: extern "C" fn(*mut u8),
         execution_end: extern "C" fn(*mut u8),
-        make_wasi_cx: impl FnMut() -> Result<WasiCtx> + 'static,
+        make_wasi_cx: impl FnMut() -> Result<Arc<WasiCtx>> + 'static,
     ) -> Result<Self> {
         let config = if let Some(o) = &options {
             o.config(Some(&Triple::host().to_string()))?

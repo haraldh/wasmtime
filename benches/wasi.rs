@@ -1,6 +1,7 @@
 //! Measure some common WASI call scenarios.
 
 use criterion::{criterion_group, criterion_main, Criterion};
+use std::sync::Arc;
 use std::{fs::File, path::Path, time::Instant};
 use wasmtime::{Engine, Linker, Module, Store, TypedFunc};
 use wasmtime_wasi::{sync::WasiCtxBuilder, WasiCtx};
@@ -47,7 +48,7 @@ fn bench_wasi(c: &mut Criterion) {
 /// - execute the body of the function for that number of loop iterations
 /// - return a single `u64` indicating how many loop iterations were executed
 ///   (to double-check)
-fn instantiate(wat: &[u8]) -> (Store<WasiCtx>, TypedFunc<u64, u64>) {
+fn instantiate(wat: &[u8]) -> (Store<Arc<WasiCtx>>, TypedFunc<u64, u64>) {
     let engine = Engine::default();
     let wasi = wasi_context();
     let mut store = Store::new(&engine, wasi);
@@ -60,7 +61,7 @@ fn instantiate(wat: &[u8]) -> (Store<WasiCtx>, TypedFunc<u64, u64>) {
 }
 
 /// Build a WASI context with some actual data to retrieve.
-fn wasi_context() -> WasiCtx {
+fn wasi_context() -> Arc<WasiCtx> {
     let wasi = WasiCtxBuilder::new();
     wasi.envs(&[
         ("a".to_string(), "b".to_string()),

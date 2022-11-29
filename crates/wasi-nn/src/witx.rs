@@ -2,6 +2,7 @@
 use crate::ctx::WasiNnCtx;
 use crate::ctx::WasiNnError;
 use anyhow::Result;
+use std::sync::Arc;
 
 // Generate the traits and types of wasi-nn in several Rust modules (e.g. `types`).
 wiggle::from_witx!({
@@ -11,7 +12,7 @@ wiggle::from_witx!({
 
 use types::NnErrno;
 
-impl<'a> types::UserErrorConversion for WasiNnCtx {
+impl<'a> types::UserErrorConversion for Arc<WasiNnCtx> {
     fn nn_errno_from_wasi_nn_error(&mut self, e: WasiNnError) -> Result<NnErrno> {
         eprintln!("Host error: {:?}", e);
         match e {
