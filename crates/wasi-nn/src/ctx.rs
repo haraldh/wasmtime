@@ -6,14 +6,15 @@ use crate::r#impl::UsageError;
 use crate::witx::types::{Graph, GraphEncoding, GraphExecutionContext};
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::sync::RwLock;
 use thiserror::Error;
 use wiggle::GuestError;
 
 /// Capture the state necessary for calling into the backend ML libraries.
 pub struct WasiNnCtx {
-    pub(crate) backends: HashMap<u8, Box<dyn Backend>>,
-    pub(crate) graphs: Table<Graph, Box<dyn BackendGraph>>,
-    pub(crate) executions: Table<GraphExecutionContext, Box<dyn BackendExecutionContext>>,
+    pub(crate) backends: RwLock<HashMap<u8, Box<dyn Backend>>>,
+    pub(crate) graphs: RwLock<Table<Graph, Box<dyn BackendGraph>>>,
+    pub(crate) executions: RwLock<Table<GraphExecutionContext, Box<dyn BackendExecutionContext>>>,
 }
 
 impl WasiNnCtx {
@@ -27,9 +28,9 @@ impl WasiNnCtx {
             Box::new(OpenvinoBackend::default()) as Box<dyn Backend>,
         );
         Ok(Self {
-            backends,
-            graphs: Table::default(),
-            executions: Table::default(),
+            backends: RwLock::new(backends),
+            graphs: RwLock::new(Table::default()),
+            executions: RwLock::new(Table::default()),
         })
     }
 }
