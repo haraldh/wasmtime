@@ -1031,7 +1031,7 @@ impl wasi_snapshot_preview1::WasiSnapshotPreview1 for WasiCtx {
             .as_array(buf_len)
             .as_slice_mut()?
             .expect("cannot use with shared memories; see https://github.com/bytecodealliance/wasmtime/issues/5235 (TODO)");
-        self.random.try_fill_bytes(buf.deref_mut())?;
+        (self.random)().try_fill_bytes(buf.deref_mut())?;
         Ok(())
     }
 

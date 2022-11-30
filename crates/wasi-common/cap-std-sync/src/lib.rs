@@ -56,7 +56,7 @@ pub struct WasiCtxBuilder(WasiCtx);
 impl WasiCtxBuilder {
     pub fn new() -> Self {
         WasiCtxBuilder(WasiCtx::new(
-            random_ctx(),
+            &random_ctx,
             clocks_ctx(),
             sched_ctx(),
             Table::new(),

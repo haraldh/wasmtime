@@ -12,7 +12,7 @@ use std::sync::Arc;
 pub struct WasiCtx {
     pub args: StringArray,
     pub env: StringArray,
-    pub random: Box<dyn RngCore + Send + Sync>,
+    pub random: &'static (dyn Fn() -> Box<dyn RngCore + Send + Sync> + Send + Sync),
     pub clocks: WasiClocks,
     pub sched: Box<dyn WasiSched>,
     pub table: Table,
@@ -20,7 +20,7 @@ pub struct WasiCtx {
 
 impl WasiCtx {
     pub fn new(
-        random: Box<dyn RngCore + Send + Sync>,
+        random: &'static (dyn Fn() -> Box<dyn RngCore + Send + Sync> + Send + Sync),
         clocks: WasiClocks,
         sched: Box<dyn WasiSched>,
         table: Table,
